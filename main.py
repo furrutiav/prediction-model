@@ -6,18 +6,17 @@
 
 # import class and data-iris
 from model import Predictor
-from data import iris
+from data import penguins
 
-columns_name = iris.columns.tolist()
+columns_name = penguins.columns.tolist()
 
-attributes = columns_name[:-1]
-predict = columns_name[-1:]
+attributes = columns_name[2:-1]
+predict = columns_name[:1]
 
-p = Predictor(iris, attributes, predict)
+p = Predictor(penguins, attributes, predict, 0, [2, 5])
 p.fit()
 
-flower = [5.1, 3.5, 1.4, 0.2]
-p.prediction(flower)
+# flower = [50.2,14.3,218,5700]
+# p.prediction(flower)
 
 p.performance()
-

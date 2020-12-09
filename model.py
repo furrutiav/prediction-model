@@ -16,7 +16,7 @@ import typing
 
 class Predictor(object):
 
-    def __init__(self, data, attributes, predict):
+    def __init__(self, data, attributes, predict, index_predict, index_attributes):
         self._data = data
         self._attributes = attributes
         self._predict = predict
@@ -36,11 +36,12 @@ class Predictor(object):
         for index, row in data.iterrows():
             row_list = row.tolist()
             self._rows.append(row_list)
-            label = row_list[-1]
+            label = row_list[index_predict]
             self._index_data[label].append(index)
+
         for label in self._labels:
             for index in self._index_data[label]:
-                self._data_predict[label].append(self._rows[index][:-1])
+                self._data_predict[label].append(self._rows[index][index_attributes[0]:index_attributes[1]+1])
         self._clean_data = []
         for col in self._columns:
             col_data = []
