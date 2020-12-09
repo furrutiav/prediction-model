@@ -23,7 +23,7 @@ class Predictor(object):
         self._labels = sorted(list(set(data[predict[0]].tolist())))
         self._size = [len(data), len(attributes), len(self._labels)]
         self._fit_size = self._size[0]
-        self._fitting = None
+        self._fitting: Fitting
         self._columns = []
         for attrib in attributes:
             self._columns.append(data[attrib].tolist())
@@ -67,6 +67,15 @@ class Predictor(object):
     def get_index(self):
         return self._index_data
 
+    def prediction(self, value, epsilon=0.001):
+        p = self._fitting.precision(value, epsilon)
+        N = 1 / sum(p)
+        label: int = int(np.argmax(p))
+        return self._labels[label], [np.round(p[label] * N * 100, 2) for label in range(self._size[-1])]
+
+    def performance(self):
+        pass
+
 
 class Fitting(object):
 
@@ -88,6 +97,55 @@ class Fitting(object):
                 std_attrib.append(np.std(sub_data))
             self._mean.append(mean_attrib)
             self._std.append(std_attrib)
+        self._SI_normalized = []
+        for attrib in range(self._size[0]):
+            SI = [self.segregation_index(attrib, 0, 1),
+                  self.segregation_index(attrib, 0, 2),
+                  self.segregation_index(attrib, 1, 2)]
+            N = 1 / sum(SI)
+            self._SI_normalized.append([SI[_] * N for _ in range(self._size[1])])
 
     def posterior_predictive(self, value, attrib, label):
         return norm.pdf(value, self._mean[attrib][label], self._std[attrib][label])
+
+    def segregation_index(self, attrib, label_1, label_2):
+        mean_1 = self._mean[attrib][label_1]
+        mean_2 = self._mean[attrib][label_2]
+        std_1 = self._std[attrib][label_1]
+        std_2 = self._std[attrib][label_2]
+        return abs(mean_1 - mean_2) / (std_1 + std_2)
+
+    def general_predictive(self, value, epsilon):
+        predictive_arr = []
+        for attrib in range(self._size[0]):
+            row = []
+            for label in range(self._size[1]):
+                epsilon_std = epsilon / self._std[attrib][label]
+                value_attrib = value[attrib]
+                p = self.posterior_predictive(value_attrib, attrib, label) * 2 * epsilon_std
+                row.append(p)
+            predictive_arr.append(row)
+        return predictive_arr
+
+    def beta_factor(self, value, epsilon):
+        p_arr = self.general_predictive(value, epsilon)
+        b_arr = []
+        for attrib in range(self._size[0]):
+            SI_N = self._SI_normalized
+            beta_0 = (1 - p_arr[attrib][1]) * SI_N[attrib][0] + (1 - p_arr[attrib][2]) * SI_N[attrib][1]
+            beta_1 = (1 - p_arr[attrib][0]) * SI_N[attrib][0] + (1 - p_arr[attrib][2]) * SI_N[attrib][2]
+            beta_2 = (1 - p_arr[attrib][0]) * SI_N[attrib][1] + (1 - p_arr[attrib][1]) * SI_N[attrib][2]
+            b_arr.append([beta_0, beta_1, beta_2])
+        return b_arr, p_arr
+
+    def certainty_attrib(self, attrib, value, epsilon):
+        b_arr, p_arr = self.beta_factor(value, epsilon)
+        return [(b_arr[attrib][0] + b_arr[attrib][1] + b_arr[attrib][2]) * p_arr[attrib][i]
+                for i in range(self._size[1])]
+
+    def certainty(self, value, epsilon):
+        return [self.certainty_attrib(attrib, value, epsilon) for attrib in range(self._size[0])]
+
+    def precision(self, value, epsilon):
+        c = self.certainty(value, epsilon)
+        return [sum([c[j][i] for j in range(self._size[0])]) for i in range(self._size[1])]

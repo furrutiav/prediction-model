@@ -4,13 +4,6 @@
     Dec-2020
 """
 
-# import library
-import numpy as np
-import matplotlib.pyplot as plt
-from scipy.stats import uniform
-from scipy.stats import norm
-import scipy.integrate as integrate
-import pandas as pd
 # import class and data-iris
 from model import Predictor
 from data import iris
@@ -23,5 +16,7 @@ predict = columns_name[-1:]
 p = Predictor(iris, attributes, predict)
 p.fit()
 
-
+flower = [5.1, 3.5, 1.4, 0.2]
+e = p.prediction(flower)
+print(e)
 
