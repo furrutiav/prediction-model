@@ -60,6 +60,7 @@ class Predictor(object):
             self._fitting = Fitting(self, size)
         else:
             self._fitting = Fitting(self, self._size[0])
+        print('Successful Training')
 
     def get_data(self):
         return self._clean_data
@@ -67,19 +68,28 @@ class Predictor(object):
     def get_index(self):
         return self._index_data
 
-    def prediction(self, value, epsilon=0.001):
+    def prediction(self, value, epsilon=0.001, show=True):
         p = self._fitting.precision(value, epsilon)
         N = 1 / sum(p)
         label: int = int(np.argmax(p))
-        return self._labels[label], [np.round(p[label] * N * 100, 2) for label in range(self._size[-1])]
+        if show:
+            print(f'prediction: {self._labels[label]}, precision: {np.round(p[label] * N * 100, 2)}, '
+                  f'more: {[np.round(p[_] * N * 100, 2) for _ in range(self._size[-1])]}')
+        return self._labels[label]
 
-    def performance(self):
-        pass
+    def performance(self, epsilon=0.001):
+        data_predict = self._data_predict
+        count = 0
+        for label in data_predict.keys():
+            for value in data_predict[label]:
+                count += 1 if self.prediction(value, epsilon=epsilon, show=False) == label else 0
+        print(f'performance: {100 * count / self._size[0]}%, fail: {self._size[0]-count}')
 
 
 class Fitting(object):
 
     def __init__(self, predictor, size):
+        print('Training...')
         self._size = size
         self._predictor = predictor
         self._data = predictor.get_data()

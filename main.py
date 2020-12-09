@@ -17,6 +17,7 @@ p = Predictor(iris, attributes, predict)
 p.fit()
 
 flower = [5.1, 3.5, 1.4, 0.2]
-e = p.prediction(flower)
-print(e)
+p.prediction(flower)
+
+p.performance()
 
