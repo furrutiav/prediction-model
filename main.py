@@ -11,12 +11,14 @@ from data import penguins
 columns_name = penguins.columns.tolist()
 
 attributes = columns_name[2:-1]
-predict = columns_name[:1]
+predict = [columns_name[0]]
+
+print(attributes, predict)
 
 p = Predictor(penguins, attributes, predict, 0, [2, 5])
 p.fit()
 
-# flower = [50.2,14.3,218,5700]
-# p.prediction(flower)
+flower = [39.1, 18.7, 181, 3750]
+p.prediction(flower)
 
 p.performance()

@@ -7,8 +7,7 @@
 # import library
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.stats import uniform
-from scipy.stats import norm
+from scipy.stats import norm, bernoulli, uniform
 import scipy.integrate as integrate
 import pandas as pd
 import typing
@@ -21,6 +20,7 @@ class Predictor(object):
         self._attributes = attributes
         self._predict = predict
         self._labels = sorted(list(set(data[predict[0]].tolist())))
+        print(self._labels)
         self._size = [len(data), len(attributes), len(self._labels)]
         self._fit_size = self._size[0]
         self._fitting: Fitting
@@ -38,7 +38,6 @@ class Predictor(object):
             self._rows.append(row_list)
             label = row_list[index_predict]
             self._index_data[label].append(index)
-
         for label in self._labels:
             for index in self._index_data[label]:
                 self._data_predict[label].append(self._rows[index][index_attributes[0]:index_attributes[1]+1])
@@ -116,8 +115,12 @@ class Fitting(object):
             N = 1 / sum(SI)
             self._SI_normalized.append([SI[_] * N for _ in range(self._size[1])])
 
-    def posterior_predictive(self, value, attrib, label):
-        return norm.pdf(value, self._mean[attrib][label], self._std[attrib][label])
+    def posterior_predictive(self, value, attrib, label, distribution='norm'):
+        if distribution != 'norm':
+            if distribution == 'Bernoulli':
+                return bernoulli.pmf(value, self._mean[attrib][label])
+        else:
+            return norm.pdf(value, self._mean[attrib][label], self._std[attrib][label])
 
     def segregation_index(self, attrib, label_1, label_2):
         mean_1 = self._mean[attrib][label_1]
