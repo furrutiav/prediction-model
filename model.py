@@ -19,8 +19,9 @@ class Predictor(object):
         self._data = data
         self._attributes = attributes
         self._predict = predict
+        print(f'attributes: {attributes}, predict: {predict}')
         self._labels = sorted(list(set(data[predict[0]].tolist())))
-        print(self._labels)
+        print(f'labels: {self._labels}')
         self._size = [len(data), len(attributes), len(self._labels)]
         self._fit_size = self._size[0]
         self._fitting: Fitting
