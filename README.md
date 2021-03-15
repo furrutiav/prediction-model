@@ -1,2 +1,2 @@
-# prediction-model 🚧(en contrucción)
+# prediction-model 🚧(en contrucción, Naive Approach)
 prediction iris data
